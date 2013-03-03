@@ -9,11 +9,12 @@ col_delimiter = '|'
 url = 'http://www.itis.gov/downloads/itisMySQLTables.tar.gz'
 tree_filename = 'itis_taxonomy.newick'
 tree_format = 'newick'
+data_dir = 'data/'
 
-if not os.path.exists('data'): os.mkdir('data')
+if not os.path.exists(data_dir): os.mkdir(data_dir)
 
 # download the taxonomy archive
-filename = os.path.join('data/', url.split('/')[-1])
+filename = os.path.join(data_dir, url.split('/')[-1])
 if os.path.exists(filename):
     print 'Using existing copy of %s' % filename
 else:
@@ -26,7 +27,7 @@ else:
 
 # extract the tables
 for extract in ('taxonomic_units', 'longnames'):
-    if os.path.exists(os.path.join('data/', extract)):
+    if os.path.exists(os.path.join(data_dir, extract)):
         print 'Using existing copy of %s' % extract
     else:
         print 'Extracting %s from %s...' % (extract, filename)
@@ -34,13 +35,13 @@ for extract in ('taxonomic_units', 'longnames'):
         full_extract = [x for x in archive.getnames() if x.split('/')[-1] == extract][0]
         member = archive.getmember(full_extract)
         member.name = extract
-        archive.extract(extract, path='data')
+        archive.extract(extract, path=data_dir)
         archive.close()
 
 # get names for all ITIS TSNs from longnames table
 print 'Getting names...'
 names = {}
-with open(os.path.join('data/', 'longnames')) as names_file:
+with open(os.path.join(data_dir, 'longnames')) as names_file:
     for line in names_file:
         line = line.strip()
         values = line.split(col_delimiter)
@@ -50,7 +51,7 @@ with open(os.path.join('data/', 'longnames')) as names_file:
 # read all node info from taxonomic_units
 print 'Reading taxonomy...'
 nodes = {}
-with open(os.path.join('data/', 'taxonomic_units')) as nodes_file:
+with open(os.path.join(data_dir, 'taxonomic_units')) as nodes_file:
     for line in nodes_file:
         line = line.strip()
         values = line.split(col_delimiter)
