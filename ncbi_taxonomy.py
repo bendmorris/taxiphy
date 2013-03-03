@@ -31,6 +31,7 @@ for extract in ('nodes.dmp', 'names.dmp'):
         print 'Extracting %s from %s...' % (extract, filename)
         archive = tarfile.open(name=filename, mode='r:gz')
         archive.extract(extract)
+        archive.close()
 
 # get names for all tax_ids from names.dmp
 print 'Getting names...'
