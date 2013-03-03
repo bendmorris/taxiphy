@@ -10,11 +10,12 @@ row_delimiter = '\t|\n'
 url = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
 tree_filename = 'ncbi_taxonomy.newick'
 tree_format = 'newick'
+data_dir = 'data/'
 
-if not os.path.exists('data'): os.mkdir('data')
+if not os.path.exists(data_dir): os.mkdir(data_dir)
 
 # download the taxonomy archive
-filename = os.path.join('data/', url.split('/')[-1])
+filename = os.path.join(data_dir, url.split('/')[-1])
 if os.path.exists(filename):
     print 'Using existing copy of %s' % filename
 else:
@@ -27,19 +28,19 @@ else:
 
 # extract the text dump
 for extract in ('nodes.dmp', 'names.dmp'):
-    if os.path.exists(os.path.join('data/', extract)):
+    if os.path.exists(os.path.join(data_dir, extract)):
         print 'Using existing copy of %s' % extract
     else:
         print 'Extracting %s from %s...' % (extract, filename)
         archive = tarfile.open(name=filename, mode='r:gz')
-        archive.extract(extract, path='data')
+        archive.extract(extract, path=data_dir)
         archive.close()
 
 # get names for all tax_ids from names.dmp
 print 'Getting names...'
 scientific_names = {}
 common_names = {}
-with open(os.path.join('data/', 'names.dmp')) as names_file:
+with open(os.path.join(data_dir, 'names.dmp')) as names_file:
     for line in names_file:
         line = line.rstrip(row_delimiter)
         values = line.split(col_delimiter)
@@ -52,7 +53,7 @@ with open(os.path.join('data/', 'names.dmp')) as names_file:
 # read all node info from nodes.dmp
 print 'Reading taxonomy...'
 nodes = {}
-with open(os.path.join('data/', 'nodes.dmp')) as nodes_file:
+with open(os.path.join(data_dir, 'nodes.dmp')) as nodes_file:
     for line in nodes_file:
         line = line.rstrip(row_delimiter)
         values = line.split(col_delimiter)
