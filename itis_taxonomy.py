@@ -56,9 +56,10 @@ with open(os.path.join('data/', 'taxonomic_units')) as nodes_file:
         values = line.split(col_delimiter)
         
         (tax_id, usage, parent_id,
-            uncertain_parent) = [values[n] for n in (0, 10, 18, 24)]
-        #if not uncertain_parent in ('', 'No'): print uncertain_parent; continue
-        #if not usage == 'valid': continue
+            uncertain_parent) = [values[n] for n in (0, 10, 17, 23)]
+        
+        #if uncertain_parent: continue
+        if not usage in ('accepted', 'valid'): continue
         
         name = names[tax_id]
         this_node = Newick.Clade(name=name)
@@ -75,6 +76,7 @@ for node_id, this_node in nodes.iteritems():
     try:
         parent_node = nodes[this_node.parent]
         parent_node.clades.append(this_node)
+
     except KeyError: pass
     
     del this_node.parent
