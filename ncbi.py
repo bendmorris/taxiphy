@@ -9,9 +9,9 @@ def main(tree_filename, tree_format='newick'):
     col_delimiter = '\t|\t'
     row_delimiter = '\t|\n'
     url = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
-    data_dir = 'data/'
+    data_dir = 'data/ncbi/'
 
-    if not os.path.exists(data_dir): os.mkdir(data_dir)
+    if not os.path.exists(data_dir): os.makedirs(data_dir)
 
     # download the taxonomy archive
     filename = os.path.join(data_dir, url.split('/')[-1])

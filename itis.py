@@ -8,9 +8,9 @@ import tarfile
 def main(tree_filename, tree_format='newick'):
     col_delimiter = '|'
     url = 'http://www.itis.gov/downloads/itisMySQLTables.tar.gz'
-    data_dir = 'data/'
+    data_dir = 'data/itis/'
 
-    if not os.path.exists(data_dir): os.mkdir(data_dir)
+    if not os.path.exists(data_dir): os.makedirs(data_dir)
 
     # download the taxonomy archive
     filename = os.path.join(data_dir, url.split('/')[-1])
