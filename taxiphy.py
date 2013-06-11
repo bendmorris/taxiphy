@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-import itis
-import ncbi
 import argparse
 import Bio.Phylo as bp
+import itis
+import ncbi
+import gbif
 taxonomies = {
               'itis': itis, 
               'ncbi': ncbi,
+              'gbif': gbif,
               }
 
 parser = argparse.ArgumentParser()
