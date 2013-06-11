@@ -3,27 +3,19 @@ import Bio.Phylo as bp
 from Bio.Phylo import Newick
 import os
 import tarfile
+from taxiphy_common import *
 
 
 def main(tree_filename, tree_format='newick'):
     col_delimiter = '|'
     url = 'http://www.itis.gov/downloads/itisMySQLTables.tar.gz'
     data_dir = 'data/itis/'
-
+    
     if not os.path.exists(data_dir): os.makedirs(data_dir)
-
+    
     # download the taxonomy archive
-    filename = os.path.join(data_dir, url.split('/')[-1])
-    if os.path.exists(filename):
-        print 'Using existing copy of %s' % filename
-    else:
-        print 'Downloading %s...' % filename
-        r = urllib2.urlopen(urllib2.Request(url))
-        assert r.geturl() == url
-        with open(filename, 'wb') as output_file:
-            output_file.write(r.read())
-        r.close()
-
+    download_file(data_dir, url)
+    
     # extract the tables
     for extract in ('taxonomic_units', 'longnames'):
         if os.path.exists(os.path.join(data_dir, extract)):
@@ -46,7 +38,7 @@ def main(tree_filename, tree_format='newick'):
             values = line.split(col_delimiter)
             tax_id, name = values
             names[tax_id] = name
-
+    
     # read all node info from taxonomic_units
     print 'Reading taxonomy...'
     nodes = {}
@@ -64,27 +56,28 @@ def main(tree_filename, tree_format='newick'):
             name = names[tax_id]
             this_node = Newick.Clade(name=name)
             nodes[tax_id] = this_node
-            this_node.parent = parent_id
+            this_node.parent_id = parent_id
             
+    print 'Found %s OTUs.' % len(nodes)
     nodes['0'] = root_node = Newick.Clade()
-
+    
     # create tree from nodes dictionary
     print 'Building tree...'
     for node_id, this_node in nodes.iteritems():
         if node_id == '0': continue
         
         try:
-            parent_node = nodes[this_node.parent]
+            parent_node = nodes[this_node.parent_id]
             parent_node.clades.append(this_node)
-
+    
         except KeyError: pass
         
-        del this_node.parent
-
+        del this_node.parent_id
+    
     tree = Newick.Tree(root=root_node)
-
+    
     # write tree to file
     print 'Writing %s tree to %s...' % (tree_format, tree_filename)
     bp.write([tree], tree_filename, tree_format)
-
+    
     print 'Done!'''
