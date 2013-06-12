@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 import argparse
 import Bio.Phylo as bp
-import itis
-import ncbi
-import gbif
+import sys
+reload(sys)
+sys.setdefaultencoding('latin1')
+from itis import Itis
+from ncbi import Ncbi
+from gbif import Gbif
 taxonomies = {
-              'itis': itis, 
-              'ncbi': ncbi,
-              'gbif': gbif,
+              'itis': Itis, 
+              'ncbi': Ncbi,
+              'gbif': Gbif,
+              'ALL': None,
               }
 
 parser = argparse.ArgumentParser()
@@ -20,8 +24,15 @@ parser.add_argument('format', help='tree format (%s)' %
                     nargs='?', default='newick')
 
 args = parser.parse_args()
-if args.filename is None:
-    args.filename = args.taxonomy + '_taxonomy.new'
 
-main = taxonomies[args.taxonomy].main
-main(args.filename, tree_format=args.format)
+if args.taxonomy == 'ALL':
+    classes = [x for x in taxonomies.values() if not x is None]
+    args.filename = None
+else:
+    classes = [taxonomies[args.taxonomy]]
+    
+for c in classes:
+    taxonomy = c()
+    print '** %s **' % taxonomy.name
+    filename = args.filename or ('%s_taxonomy.%s' % (taxonomy.name, args.format))
+    taxonomy.main(filename, tree_format=args.format)
