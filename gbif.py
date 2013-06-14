@@ -36,11 +36,15 @@ class Gbif(Taxonomy):
             for line in taxonomy_file:
                 line = line.strip()
                 values = line.split(col_delimiter)
-                id, parent_id, _, _, name, _, status = values[:7]
-                if status != 'accepted': continue
+                id, parent_id, syn_id, _, name, _, status = values[:7]
                 
-                nodes[id] = BaseTree.Clade(name=name)
-                nodes[id].parent_id = parent_id
+                if 'synonym' in status and tree_format == 'cdao':
+                    nodes[id] = ('synonym', name, syn_id)
+                elif not status in ('accepted', 'doubtful', 'misapplied'): 
+                    pass
+                else:
+                    nodes[id] = BaseTree.Clade(name=name)
+                    nodes[id].parent_id = parent_id
         
         print 'Found %s OTUs.' % len(nodes)
         nodes[''] = root_node = BaseTree.Clade()
@@ -49,11 +53,26 @@ class Gbif(Taxonomy):
         print 'Building tree...'
         for node_id, this_node in nodes.iteritems():
             if not node_id: continue
-            try:
-                parent_node = nodes[this_node.parent_id]
-                parent_node.clades.append(this_node)
-                del this_node.parent_id
-            except KeyError: pass
+            
+            if isinstance(this_node, BaseTree.Clade):
+                try:
+                    parent_node = nodes[this_node.parent_id]
+                    parent_node.clades.append(this_node)
+                    del this_node.parent_id
+                except (KeyError, AttributeError): pass
+                
+            elif this_node[0] == 'synonym':
+                _, name, syn_id = this_node
+                try:
+                    accepted_node = nodes[syn_id]
+                except KeyError: continue
+                
+                if not isinstance(accepted_node, BaseTree.Clade): continue
+                
+                if not hasattr(accepted_node, 'tu_attributes'):
+                    nodes[syn_id].tu_attributes = []
+                nodes[syn_id].tu_attributes.append(('<http://www.w3.org/2000/01/rdf-schema#label>', repr(name)))
+                print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
         
         tree = BaseTree.Tree(root=root_node)
         

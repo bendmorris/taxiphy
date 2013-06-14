@@ -17,7 +17,7 @@ class Itis(Taxonomy):
         self.download_file(url)
         
         # extract the tables
-        for extract in ('taxonomic_units', 'longnames'):
+        for extract in ('taxonomic_units', 'longnames', 'synonym_links'):
             if os.path.exists(os.path.join(self.data_dir, extract)):
                 print 'Using existing copy of %s' % extract
             else:
@@ -40,6 +40,7 @@ class Itis(Taxonomy):
                 names[tax_id] = name
         
         # read all node info from taxonomic_units
+        # TODO: synonyms: get (bad_id, good_id) from synonym_links
         print 'Reading taxonomy...'
         nodes = {}
         with open(os.path.join(self.data_dir, 'taxonomic_units')) as nodes_file:
@@ -58,6 +59,15 @@ class Itis(Taxonomy):
                 nodes[tax_id] = this_node
                 this_node.parent_id = parent_id
                 
+        if tree_format == 'cdao':
+            # get synonym definitions
+            with open(os.path.join(self.data_dir, 'synonym_links')) as synonym_file:
+                for line in synonym_file:
+                    line = line.strip()
+                    values = line.split(col_delimiter)
+                    node_id, syn_id, _ = values
+                    nodes[node_id] = ('synonym', syn_id, names[node_id])
+                
         print 'Found %s OTUs.' % len(nodes)
         nodes['0'] = root_node = BaseTree.Clade()
         
@@ -66,13 +76,27 @@ class Itis(Taxonomy):
         for node_id, this_node in nodes.iteritems():
             if node_id == '0': continue
             
-            try:
-                parent_node = nodes[this_node.parent_id]
-                parent_node.clades.append(this_node)
-        
-            except KeyError: pass
+            if isinstance(this_node, BaseTree.Clade):
+                try:
+                    parent_node = nodes[this_node.parent_id]
+                    parent_node.clades.append(this_node)
             
-            del this_node.parent_id
+                except KeyError: pass
+                
+                del this_node.parent_id
+                
+            elif this_node[0] == 'synonym':
+                _, name, syn_id = this_node
+                try:
+                    accepted_node = nodes[syn_id]
+                except KeyError: continue
+                
+                if not isinstance(accepted_node, BaseTree.Clade): continue
+                
+                if not hasattr(accepted_node, 'tu_attributes'):
+                    nodes[syn_id].tu_attributes = []
+                nodes[syn_id].tu_attributes.append(('<http://www.w3.org/2000/01/rdf-schema#label>', repr(name)))
+                print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
         
         tree = BaseTree.Tree(root=root_node)
         

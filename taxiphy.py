@@ -17,9 +17,9 @@ taxonomies = {
 parser = argparse.ArgumentParser()
 parser.add_argument('taxonomy', help='name of taxonomy to download (%s)' % 
                     ', '.join(sorted(taxonomies.keys())))
-parser.add_argument('filename', help='file to save tree', 
+parser.add_argument('-o', '--output', help='path to save tree output', 
                     nargs='?', default=None)
-parser.add_argument('format', help='tree format (%s)' %
+parser.add_argument('-f', '--format', help='tree format (%s)' %
                     ', '.join(sorted(bp._io.supported_formats.keys())),
                     nargs='?', default='newick')
 
@@ -34,5 +34,6 @@ else:
 for c in classes:
     taxonomy = c()
     print '** %s **' % taxonomy.name
-    filename = args.filename or ('%s_taxonomy.%s' % (taxonomy.name, args.format))
+    filename = ((args.filename if hasattr(args, 'filename') else None) 
+                or ('%s_taxonomy.%s' % (taxonomy.name, args.format)))
     taxonomy.main(filename, tree_format=args.format)
