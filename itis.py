@@ -14,7 +14,7 @@ class Itis(Taxonomy):
         url = 'http://www.itis.gov/downloads/itisMySQLTables.tar.gz'
         
         # download the taxonomy archive
-        self.download_file(url)
+        filename = self.download_file(url)
         
         # extract the tables
         for extract in ('taxonomic_units', 'longnames', 'synonym_links'):

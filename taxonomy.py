@@ -24,3 +24,5 @@ class Taxonomy:
                     data = r.read(1024)
                     if data: output_file.write(data)
             r.close()
+            
+        return filename
