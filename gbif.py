@@ -38,9 +38,11 @@ class Gbif(Taxonomy):
                 values = line.split(col_delimiter)
                 id, parent_id, syn_id, _, name, _, status = values[:7]
                 
-                if 'synonym' in status and tree_format == 'cdao':
+                if syn_id and not 'synonym' in status:
+                    continue
+                elif syn_id and 'synonym' in status and tree_format == 'cdao':
                     nodes[id] = ('synonym', name, syn_id)
-                elif not status in ('accepted', 'doubtful', 'misapplied'): 
+                elif not status in ('accepted', 'doubtful',): 
                     pass
                 else:
                     nodes[id] = BaseTree.Clade(name=name)
