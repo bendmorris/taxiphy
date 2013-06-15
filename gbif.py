@@ -38,13 +38,15 @@ class Gbif(Taxonomy):
                 values = line.split(col_delimiter)
                 id, parent_id, syn_id, _, name, _, status = values[:7]
                 
+                # skip incertae sedis taxa
+                if id == '0': continue
+                
                 if syn_id and not 'synonym' in status:
                     continue
-                elif syn_id and 'synonym' in status and tree_format == 'cdao':
-                    nodes[id] = ('synonym', name, syn_id)
-                elif not status in ('accepted', 'doubtful',): 
-                    pass
-                else:
+                elif syn_id and 'synonym' in status:
+                    if tree_format == 'cdao':
+                        nodes[id] = ('synonym', name, syn_id)
+                elif not syn_id:
                     nodes[id] = BaseTree.Clade(name=name)
                     nodes[id].parent_id = parent_id
         
