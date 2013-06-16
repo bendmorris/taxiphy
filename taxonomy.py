@@ -26,3 +26,7 @@ class Taxonomy:
             r.close()
             
         return filename
+
+    @classmethod
+    def format_rdf_string(cls, x):
+        return '"%s"' % x.replace('"', '\\"')

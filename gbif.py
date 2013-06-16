@@ -75,8 +75,8 @@ class Gbif(Taxonomy):
                 
                 if not hasattr(accepted_node, 'tu_attributes'):
                     nodes[syn_id].tu_attributes = []
-                nodes[syn_id].tu_attributes.append(('<http://www.w3.org/2000/01/rdf-schema#label>', repr(name)))
-                print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
+                nodes[syn_id].tu_attributes.append(('rdfs:label', Taxonomy.format_rdf_string(name)))
+                #print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
         
         tree = BaseTree.Tree(root=root_node)
         

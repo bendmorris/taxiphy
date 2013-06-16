@@ -40,7 +40,6 @@ class Itis(Taxonomy):
                 names[tax_id] = name
         
         # read all node info from taxonomic_units
-        # TODO: synonyms: get (bad_id, good_id) from synonym_links
         print 'Reading taxonomy...'
         nodes = {}
         with open(os.path.join(self.data_dir, 'taxonomic_units')) as nodes_file:
@@ -61,12 +60,13 @@ class Itis(Taxonomy):
                 
         if tree_format == 'cdao':
             # get synonym definitions
+            print 'Getting synonyms...'
             with open(os.path.join(self.data_dir, 'synonym_links')) as synonym_file:
                 for line in synonym_file:
                     line = line.strip()
                     values = line.split(col_delimiter)
                     node_id, syn_id, _ = values
-                    nodes[node_id] = ('synonym', syn_id, names[node_id])
+                    nodes[node_id] = ('synonym', names[node_id], syn_id)
                 
         print 'Found %s OTUs.' % len(nodes)
         nodes['0'] = root_node = BaseTree.Clade()
@@ -81,7 +81,7 @@ class Itis(Taxonomy):
                     parent_node = nodes[this_node.parent_id]
                     parent_node.clades.append(this_node)
             
-                except KeyError: pass
+                except (KeyError, AttributeError): continue
                 
                 del this_node.parent_id
                 
@@ -95,8 +95,8 @@ class Itis(Taxonomy):
                 
                 if not hasattr(accepted_node, 'tu_attributes'):
                     nodes[syn_id].tu_attributes = []
-                nodes[syn_id].tu_attributes.append(('<http://www.w3.org/2000/01/rdf-schema#label>', repr(name)))
-                print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
+                nodes[syn_id].tu_attributes.append(('rdfs:label', Taxonomy.format_rdf_string(name)))
+                #print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
         
         tree = BaseTree.Tree(root=root_node)
         
