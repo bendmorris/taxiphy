@@ -95,7 +95,7 @@ class Itis(Taxonomy):
                 
                 if not hasattr(accepted_node, 'tu_attributes'):
                     nodes[syn_id].tu_attributes = []
-                nodes[syn_id].tu_attributes.append(('rdfs:label', Taxonomy.format_rdf_string(name)))
+                nodes[syn_id].tu_attributes.append(('<http://www.w3.org/2004/02/skos/core#altLabel>', Taxonomy.format_rdf_string(name)))
                 #print 'Synonym: %s -> %s' % (name, nodes[syn_id].name)
         
         tree = BaseTree.Tree(root=root_node)
