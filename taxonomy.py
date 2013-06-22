@@ -1,4 +1,5 @@
 import os
+import urllib2
 
 
 class Taxonomy:
