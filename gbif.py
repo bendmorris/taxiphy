@@ -14,22 +14,19 @@ class Gbif(Taxonomy):
         url = 'http://ecat-dev.gbif.org/repository/export/checklist1.zip'
         
         # download the taxonomy archive
-        self.download_file(url)
+        filename = self.download_file(url)
         
         # extract the tables
-        for extract in ('taxon.txt',):
-            if os.path.exists(os.path.join(self.data_dir, extract)):
-                print 'Using existing copy of %s' % extract
-            else:
-                print 'Extracting %s from %s...' % (extract, filename)
-                archive = tarfile.open(name=filename, mode='r:gz')
-                full_extract = [x for x in archive.getnames() if x.split('/')[-1] == extract][0]
-                member = archive.getmember(full_extract)
-                member.name = extract
-                archive.extract(extract, path=self.data_dir)
-                archive.close()
+        extract = 'taxon.txt'
+        if os.path.exists(os.path.join(self.data_dir, extract)):
+            print 'Using existing copy of %s' % extract
+        else:
+            print 'Extracting %s from %s...' % (extract, filename)
+            archive = zipfile.ZipFile(filename, mode='r')
+            archive.extract(extract, path=self.data_dir)
+            archive.close()
 
-        # get names for all ITIS TSNs from longnames table
+        # build BioPython clades
         print 'Reading taxonomy...'
         nodes = {}
         with open(os.path.join(self.data_dir, 'taxon.txt')) as taxonomy_file:
