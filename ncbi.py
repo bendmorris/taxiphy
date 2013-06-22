@@ -3,6 +3,7 @@ import Bio.Phylo as bp
 from Bio.Phylo import BaseTree
 import os
 import tarfile
+from collections import defaultdict
 from taxonomy import Taxonomy
 
 
@@ -15,7 +16,7 @@ class Ncbi(Taxonomy):
         url = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
         
         # download the taxonomy archive
-        self.download_file(url)
+        filename = self.download_file(url)
         
         # extract the text dump
         for extract in ('nodes.dmp', 'names.dmp'):
@@ -30,7 +31,7 @@ class Ncbi(Taxonomy):
         # get names for all tax_ids from names.dmp
         print 'Getting names...'
         scientific_names = {}
-        common_names = {}
+        other_names = defaultdict(set)
         with open(os.path.join(self.data_dir, 'names.dmp')) as names_file:
             for line in names_file:
                 line = line.rstrip(row_delimiter)
@@ -38,8 +39,8 @@ class Ncbi(Taxonomy):
                 tax_id, name_txt, _, name_type = values[:4]
                 if name_type == 'scientific name':
                     scientific_names[tax_id] = name_txt
-                elif name_type == 'common name':
-                    common_names[tax_id] = name_txt
+                else:
+                    other_names[tax_id].add(name_txt)
         
         # read all node info from nodes.dmp
         print 'Reading taxonomy...'
@@ -50,10 +51,17 @@ class Ncbi(Taxonomy):
                 values = line.split(col_delimiter)
                 tax_id, parent_id = values[:2]
                 this_node = BaseTree.Clade(name=scientific_names[tax_id])
-                if tax_id in common_names:
-                    this_node.comment = common_names[tax_id]
+                
                 nodes[tax_id] = this_node
                 this_node.parent_id = parent_id
+
+                if tree_format == 'cdao':
+                    # add common names, synonyms, mispellings, etc. as skos:altLabels
+                    if not hasattr(this_node, 'tu_attributes'):
+                        this_node.tu_attributes = []
+                    for x in other_names[tax_id]:
+                        this_node.tu_attributes.append(('<http://www.w3.org/2004/02/skos/core#altLabel>', Taxonomy.format_rdf_string(x)))
+
         
         print 'Found %s OTUs.' % len(nodes)
         
