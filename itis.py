@@ -3,6 +3,7 @@ import Bio.Phylo as bp
 from Bio.Phylo import BaseTree
 import os
 import tarfile
+from collections import defaultdict
 from taxonomy import Taxonomy
 
 
@@ -17,7 +18,7 @@ class Itis(Taxonomy):
         filename = self.download_file(url)
         
         # extract the tables
-        for extract in ('taxonomic_units', 'longnames', 'synonym_links'):
+        for extract in ('taxonomic_units', 'longnames', 'synonym_links', 'vernaculars'):
             if os.path.exists(os.path.join(self.data_dir, extract)):
                 print 'Using existing copy of %s' % extract
             else:
@@ -58,6 +59,7 @@ class Itis(Taxonomy):
                 nodes[tax_id] = this_node
                 this_node.parent_id = parent_id
                 
+        other_names = defaultdict(set)
         if tree_format == 'cdao':
             # get synonym definitions
             print 'Getting synonyms...'
@@ -67,6 +69,12 @@ class Itis(Taxonomy):
                     values = line.split(col_delimiter)
                     node_id, syn_id, _ = values
                     nodes[node_id] = ('synonym', names[node_id], syn_id)
+            with open(os.path.join(self.data_dir, 'vernaculars')) as synonym_file:
+                for line in synonym_file:
+                    line = line.strip()
+                    values = line.split(col_delimiter)
+                    tax_id, name = values[:2]
+                    other_names[tax_id].add(name)
                 
         print 'Found %s OTUs.' % len(nodes)
         nodes['0'] = root_node = BaseTree.Clade()
@@ -85,6 +93,11 @@ class Itis(Taxonomy):
                 
                 del this_node.parent_id
                 
+                if not hasattr(this_node, 'tu_attributes'):
+                    this_node.tu_attributes = []
+                for name in other_names[node_id]:
+                    this_node.tu_attributes.append(('<http://www.w3.org/2004/02/skos/core#altLabel>', Taxonomy.format_rdf_string(name)))
+
             elif this_node[0] == 'synonym':
                 _, name, syn_id = this_node
                 try:
