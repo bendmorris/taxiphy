@@ -23,6 +23,8 @@ def main():
     parser.add_argument('-f', '--format', help='tree format (%s)' %
                         ', '.join(sorted(bp._io.supported_formats.keys())),
                         nargs='?', default='newick')
+    parser.add_argument('-i', '--id', help='Use NCBI ids as label',
+                    action='store_true')
 
     args = parser.parse_args()
 
@@ -37,7 +39,7 @@ def main():
         print '** %s **' % taxonomy.name
         filename = ((args.filename if hasattr(args, 'filename') else None) 
                     or ('%s_taxonomy.%s' % (taxonomy.name, args.format)))
-        taxonomy.main(filename, tree_format=args.format)
+        taxonomy.main(filename, tree_format=args.format, ids=args.id)
         
 if __name__ == '__main__':
     main()

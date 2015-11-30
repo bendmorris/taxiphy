@@ -10,7 +10,7 @@ from taxonomy import Taxonomy
 class Ncbi(Taxonomy):
     name = 'ncbi'
     
-    def main(self, tree_filename, tree_format='newick'):
+    def main(self, tree_filename, tree_format='newick', ids=None):
         col_delimiter = '\t|\t'
         row_delimiter = '\t|\n'
         url = 'ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz'
@@ -50,7 +50,10 @@ class Ncbi(Taxonomy):
                 line = line.rstrip(row_delimiter)
                 values = line.split(col_delimiter)
                 tax_id, parent_id = values[:2]
-                this_node = BaseTree.Clade(name=scientific_names[tax_id])
+                if ids:
+                    this_node = BaseTree.Clade(name=tax_id)
+                else:
+                    this_node = BaseTree.Clade(name=scientific_names[tax_id])
                 
                 nodes[tax_id] = this_node
                 this_node.parent_id = parent_id
